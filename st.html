@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+        .stopwatch {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        button {
+            font-size: 1.2em;
+            margin: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .start { background-color: #28a745; color: white; }
+        .pause { background-color: #ffc107; color: black; }
+        .reset { background-color: #dc3545; color: white; }
+        .lap { background-color: #007bff; color: white; }
+        .resume { background-color: #17a2b8; color: white; }
+        .clear-laps { background-color: #6c757d; color: white; }
+        button:hover { opacity: 0.8; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .laps {
+            margin-top: 20px;
+            text-align: left;
+            display: inline-block;
+            max-width: 200px;
+        }
+        .laps li {
+            background: #e9ecef;
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stopwatch</h1>
+    <div class="container">
+        <div class="stopwatch">00:00:00</div>
+        <button class="start" onclick="startStopwatch()">Start</button>
+        <button class="pause" onclick="pauseStopwatch()" disabled>Pause</button>
+        <button class="resume" onclick="resumeStopwatch()" disabled>Resume</button>
+        <button class="reset" onclick="resetStopwatch()" disabled>Reset</button>
+        <button class="lap" onclick="recordLap()" disabled>Lap</button>
+        <button class="clear-laps" onclick="clearLaps()" disabled>Clear Laps</button>
+        <ul class="laps"></ul>
+    </div>
+    
+    <script>
+        let timer;
+        let startTime;
+        let elapsedTime = 0;
+        let running = false;
+        let lapCounter = 1;
+        let lastLapTime = 0;
+
+        function formatTime(ms) {
+            let totalSeconds = Math.floor(ms / 1000);
+            let minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+            let seconds = (totalSeconds % 60).toString().padStart(2, '0');
+            let milliseconds = Math.floor((ms % 1000) / 10).toString().padStart(2, '0'); // Two-digit milliseconds
+            return `${minutes}:${seconds}:${milliseconds}`;
+        }
+
+        function updateDisplay() {
+            document.querySelector('.stopwatch').textContent = formatTime(elapsedTime);
+        }
+
+        function updateButtons() {
+            document.querySelector('.start').disabled = running;
+            document.querySelector('.pause').disabled = !running;
+            document.querySelector('.resume').disabled = running || elapsedTime === 0;
+            document.querySelector('.reset').disabled = elapsedTime === 0;
+            document.querySelector('.lap').disabled = !running;
+            document.querySelector('.clear-laps').disabled = document.querySelector('.laps').children.length === 0;
+        }
+
+        function startStopwatch() {
+            if (!running) {
+                startTime = Date.now() - elapsedTime;
+                timer = setInterval(() => {
+                    elapsedTime = Date.now() - startTime;
+                    updateDisplay();
+                }, 10);
+                running = true;
+                updateButtons();
+            }
+        }
+
+        function pauseStopwatch() {
+            if (running) {
+                clearInterval(timer);
+                running = false;
+                updateButtons();
+            }
+        }
+
+        function resumeStopwatch() {
+            startStopwatch();
+        }
+
+        function resetStopwatch() {
+            clearInterval(timer);
+            elapsedTime = 0;
+            running = false;
+            lastLapTime = 0;
+            lapCounter = 1;
+            updateDisplay();
+            document.querySelector('.laps').innerHTML = '';
+            updateButtons();
+        }
+
+        function recordLap() {
+            if (running) {
+                let lapTime = elapsedTime - lastLapTime;
+                lastLapTime = elapsedTime;
+                const lapItem = document.createElement('li');
+                lapItem.textContent = `Lap ${lapCounter++}: ${formatTime(elapsedTime)} (Δ${formatTime(lapTime)})`;
+                document.querySelector('.laps').appendChild(lapItem);
+                updateButtons();
+            }
+        }
+
+        function clearLaps() {
+            document.querySelector('.laps').innerHTML = '';
+            lapCounter = 1;
+            lastLapTime = 0;
+            updateButtons();
+        }
+    </script>
+</body>
+</html>
